@@ -10,7 +10,7 @@ const CarSchema = z.object({
 
 const CarCreateSchema = CarSchema.omit({ id: true });
 
-export interface CarType extends z.infer<typeof CarSchema> {}
+export type CarType = z.infer<typeof CarSchema>;
 
 export interface ICarService {
   getAllCars(): CarType[];

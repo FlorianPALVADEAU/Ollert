@@ -2,10 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import FormModal from "@/components/formModal";
-import { useGetAllCars, useCreateCar, useUpdateCar, useDeleteCar } from "./api/endpoints";
-import { CarType } from "./api/cars/service";
 import { useEffect } from "react";
 import { LoaderCircle } from "lucide-react";
+import { CarType } from "./api/cars/service";
+import { useGetAllCars, useCreateCar, useUpdateCar, useDeleteCar } from "./api/endpoints";
 
 export default function Home() {
   const { data: cars, isLoading: isLoadingCars, refetch: carsRefetch } = useGetAllCars();
@@ -14,7 +14,7 @@ export default function Home() {
   const updateCarMutation = useUpdateCar();
   const deleteCarMutation = useDeleteCar();
 
-  const handleSave = (car: { id?: any; car?: { brand?: string; model?: string; year?: number; }; brand?: string; model?: string; year?: number; }) => {
+  const handleSave = (car: { id?: string; car?: { brand?: string; model?: string; year?: number; }; brand?: string; model?: string; year?: number; }) => {
     if (car.id) {
       if (car.id && car.brand && car.model && car.year) {
         updateCarMutation.mutate({
@@ -52,7 +52,7 @@ export default function Home() {
     if (createCarMutation.isSuccess || updateCarMutation.isSuccess || deleteCarMutation.isSuccess) {
       carsRefetch();
     }
-  }, [createCarMutation.isSuccess, updateCarMutation.isSuccess, deleteCarMutation.isSuccess]);
+  }, [createCarMutation.isSuccess, updateCarMutation.isSuccess, deleteCarMutation.isSuccess, carsRefetch]);
   
   return (
       <div className="p-8">

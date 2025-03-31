@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
-import { CarService } from "./service";
 import { supabase } from "@/lib/supabase";
 
-const carService = new CarService();
 
 export async function GET() {
   try {
@@ -11,7 +9,7 @@ export async function GET() {
     if (error) throw error;
 
     return NextResponse.json(data, { status: 200 });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to fetch cars" }, { status: 500 });
   }
 }
