@@ -50,7 +50,7 @@ export async function DELETE({ params }: { params: { id: string } }) {
 
     if (error) throw error;
 
-    return NextResponse.json({ message: "Column deleted successfully" }, { status: 204 });
+    return NextResponse.json({ message: "Column deleted successfully" }, { status: 200 });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
     return NextResponse.json({ error: errorMessage }, { status: 500 });
