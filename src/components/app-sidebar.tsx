@@ -1,4 +1,13 @@
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-react"
+"use client"
+
+import {
+    Calendar,
+    Home,
+    Inbox,
+    Search,
+    Settings,
+    LogOut,
+} from "lucide-react"
 
 import {
     Sidebar,
@@ -11,27 +20,14 @@ import {
     SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
+import { logout } from "@/app/login/action"
+
 // Menu items.
 const items = [
     {
         title: "Home",
         url: "#",
         icon: Home,
-    },
-    {
-        title: "Inbox",
-        url: "#",
-        icon: Inbox,
-    },
-    {
-        title: "Calendar",
-        url: "#",
-        icon: Calendar,
-    },
-    {
-        title: "Search",
-        url: "#",
-        icon: Search,
     },
     {
         title: "Settings",
@@ -58,6 +54,14 @@ export function AppSidebar() {
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
                             ))}
+                            <SidebarMenuItem>
+                                <form action={logout}>
+                                    <SidebarMenuButton type="submit" className="w-full">
+                                        <LogOut />
+                                        <span>Déconnexion</span>
+                                    </SidebarMenuButton>
+                                </form>
+                            </SidebarMenuItem>
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
