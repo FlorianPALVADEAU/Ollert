@@ -1,121 +1,51 @@
+// /app/dashboard/page.tsx
 "use client";
 
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import FormModal from "@/components/formModal";
-import { useEffect } from "react";
-import { LoaderCircle } from "lucide-react";
-import { CarType } from "./api/cars/service";
-import { useGetAllCars, useCreateCar, useUpdateCar, useDeleteCar } from "./api/endpoints";
+import Link from "next/link";
+import { Plus } from "lucide-react";
 
-export default function Home() {
-  const { data: cars, isLoading: isLoadingCars, refetch: carsRefetch } = useGetAllCars();
+// Simulation de données, à remplacer par fetch Supabase
+const mockBoards = [
+  { id: "board-1", name: "Projet Client A" },
+  { id: "board-2", name: "Refonte Marketing" },
+  { id: "board-3", name: "Trello Clone" },
+];
 
-  const createCarMutation = useCreateCar();
-  const updateCarMutation = useUpdateCar();
-  const deleteCarMutation = useDeleteCar();
+export default function DashboardPage() {
+  const [boards, setBoards] = useState<typeof mockBoards>([]);
 
-  const handleSave = (car: { id?: string; car?: { brand?: string; model?: string; year?: number; }; brand?: string; model?: string; year?: number; }) => {
-    if (car.id) {
-      if (car.id && car.brand && car.model && car.year) {
-        updateCarMutation.mutate({
-          id: car.id,
-          car: {
-            id: car.id,
-            brand: car.brand,
-            model: car.model,
-            year: car.year,
-          },
-        });
-      }
-    } else {
-      if (car.brand && car.model && car.year) {
-        createCarMutation.mutate({
-          brand: car.brand,
-          model: car.model,
-          year: car.year,
-        });
-      } else {
-        console.error("All fields (brand, model, year) are required to create a car.");
-      }
-    }
-  };
-
-  // Handle delete
-  const handleDelete = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this car?")) {
-      deleteCarMutation.mutate(id);
-    }
-  };
-
-  // refetch on every create, update or delete
   useEffect(() => {
-    if (createCarMutation.isSuccess || updateCarMutation.isSuccess || deleteCarMutation.isSuccess) {
-      carsRefetch();
-    }
-  }, [createCarMutation.isSuccess, updateCarMutation.isSuccess, deleteCarMutation.isSuccess, carsRefetch]);
-  
+    // Ici, tu pourrais faire un appel à Supabase pour récupérer les tableaux
+    setBoards(mockBoards);
+  }, []);
+
   return (
-      <div className="p-8">
-        <h1 className="text-2xl font-bold mb-4">Car Management</h1>
-
-        {/* Form Modal for adding a new car */}
-        <FormModal onSave={handleSave} />
-
-        {/* Car List */}
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold mb-2">Car List</h2>
-          <table className="table-auto w-full border-collapse border border-gray-200">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="border border-gray-200 px-4 py-2">Brand</th>
-                <th className="border border-gray-200 px-4 py-2">Model</th>
-                <th className="border border-gray-200 px-4 py-2">Year</th>
-                <th className="border border-gray-200 px-4 py-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoadingCars ? (
-                  <tr>
-                    <td colSpan={4} className="text-center py-4">
-                      <span className="w-full flex justify-center items-center h-32">
-                        <LoaderCircle className="animate-spin text-gray-900 dark:text-gray-50" size={48} />
-                      </span>
-                    </td>
-                  </tr>
-                ) : cars?.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="text-center py-4">
-                      No cars available.
-                    </td>
-                  </tr>
-                ) : (
-                  cars?.map((car: CarType) => (
-                    <tr key={car.id}>
-                      <td className="border border-gray-200 px-4 py-2">{car.brand}</td>
-                      <td className="border border-gray-200 px-4 py-2">{car.model}</td>
-                      <td className="border border-gray-200 px-4 py-2">{car.year}</td>
-                      <td className="border border-gray-200 px-4 py-2 flex gap-2">
-                        <FormModal car={car} onSave={handleSave} />
-                        <Button
-                          variant="destructive"
-                          onClick={() => handleDelete(car.id)}
-                          disabled={deleteCarMutation.status === "pending"}
-                        >
-                          Delete
-                        </Button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-
-            </tbody>
-          </table>
-        </div>
-
-        {/* Show loader for create or update */}
-        {(createCarMutation.status === "pending" || updateCarMutation.status === "pending") && (
-          <div className="text-center mt-4">Saving changes...</div>
-        )}
+    <div className="p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Mes Tableaux</h1>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          Nouveau tableau
+        </Button>
       </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        {boards.map((board) => (
+          <Link key={board.id} href={`/board/${board.id}`}>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardHeader>
+                <CardTitle>{board.name}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">Accéder au tableau</p>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
+    </div>
   );
 }
