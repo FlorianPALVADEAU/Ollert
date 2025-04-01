@@ -5,8 +5,7 @@ import { z } from "zod";
 
 export async function GET() {
   try {
-    const { data, error } = await supabase.from("tasks").select("*");
-
+    const { data, error } = await supabase.from("tickets").select("*");
     if (error) throw error;
 
     return NextResponse.json(data, { status: 200 });
