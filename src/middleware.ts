@@ -62,6 +62,7 @@ export async function middleware(request: NextRequest) {
     // Liste des routes qui ne nécessitent pas d'authentification
     const publicRoutes = [
         '/login',
+        '/register',
         '/auth/confirm',
         '/error'
     ];
