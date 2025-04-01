@@ -10,7 +10,7 @@ export async function GET() {
 
     return NextResponse.json(data, { status: 200 });
   } catch {
-    return NextResponse.json({ error: "Failed to fetch tasks" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch tickets" }, { status: 500 });
   }
 }
 
