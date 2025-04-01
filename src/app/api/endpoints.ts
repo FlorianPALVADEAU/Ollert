@@ -134,7 +134,7 @@ export const getTicketById = async (id: string) => {
   }
 };
 
-export const createTicket = async (ticket: { title: string; description: string; assigneeId: string }) => {
+export const createTicket = async (ticket: { title: string; description: string; assignees: string[] }) => {
   try {
     const response = await axiosClient.post("/api/tickets", ticket);
     return response.data;
