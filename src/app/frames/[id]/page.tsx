@@ -12,16 +12,13 @@ import {
   DragEndEvent,
 } from "@dnd-kit/core";
 import { Column } from "@/components/board/Column";
-import { AddColumnDialog } from "@/components/board/AddColumnDialog";
 import { EditColumnDialog } from "@/components/board/EditColumnDialog";
 import { DeleteColumnDialog } from "@/components/board/DeleteColumnDialog";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { createColumn, createTicket, addCollaborator } from "./action";
-import { Card, CardContent } from "@/components/ui/card";
+import { createColumn, addCollaborator } from "./action";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -48,16 +45,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-import { Plus } from "lucide-react";
-import {
-  DragDropContext,
-  Droppable,
-  Draggable,
-  DropResult,
-} from "react-beautiful-dnd";
 import { getAllNonCollaboratorUsers } from "@/app/api/users/users.endpoints";
 import { UserType } from "@/app/types/users.type";
-import { set } from "zod";
 
 export default function FramePage() {
   const { id: frameId } = useParams() as { id: string };
