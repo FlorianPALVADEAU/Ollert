@@ -1,47 +1,59 @@
-'use server'
+"use server";
 
-import { createClient } from "@/utils/supabase/server"
-import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
+import { createClient } from "@/utils/supabase/server";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+
+export async function addCollaborator(frameId: string, userId: string) {
+  const supabase = await createClient();
+
+  const { error: collabError } = await supabase
+    .from("frame_collaborators")
+    .insert([{ user_id: userId, frame_id: frameId }]);
+
+  if (collabError) throw new Error(collabError.message);
+
+  revalidatePath(`/frames/${frameId}`);
+}
 
 // GET COLUMNS + TICKETS
 export async function getFrameData(frameId: string) {
-  const supabase = await createClient()
+  const supabase = await createClient();
 
   const { data: columns, error: colError } = await supabase
     .from("columns")
     .select("id, name, created_at")
     .eq("frame_id", frameId)
-    .order("created_at", { ascending: true })
+    .order("created_at", { ascending: true });
 
-  if (colError) throw new Error(colError.message)
+  if (colError) throw new Error(colError.message);
 
-  const columnIds = columns.map(c => c.id)
+  const columnIds = columns.map((c) => c.id);
 
   const { data: tickets, error: ticketError } = await supabase
     .from("tickets")
     .select("id, title, description, column_id, position, status")
     .in("column_id", columnIds)
-    .order("position", { ascending: true })
+    .order("position", { ascending: true });
 
-  if (ticketError) throw new Error(ticketError.message)
+  if (ticketError) throw new Error(ticketError.message);
 
-  return { columns, tickets }
+  return { columns, tickets };
 }
 
 // CREATE COLUMN
 export async function createColumn(formData: FormData) {
-  const supabase = await createClient()
-  const name = formData.get("name") as string
-  const frameId = formData.get("frame_id") as string
+  const supabase = await createClient();
+  const name = formData.get("name") as string;
+  const frameId = formData.get("frame_id") as string;
 
   const { error } = await supabase
     .from("columns")
-    .insert([{ name, frame_id: frameId }])
+    .insert([{ name, frame_id: frameId }]);
 
-  if (error) throw new Error(error.message)
+  if (error) throw new Error(error.message);
 
-  redirect(`/frames/${frameId}`)
+  redirect(`/frames/${frameId}`);
 }
 
 //UPDATE COLUMN
@@ -62,7 +74,7 @@ export async function updateColumn(formData: FormData) {
   const { error } = await supabase
     .from("columns")
     .update({ name })
-    .eq('id', columnId);
+    .eq("id", columnId);
 
   if (error) throw new Error(error.message);
 
@@ -87,10 +99,7 @@ export async function deleteColumn(columnId: string) {
   }
 
   // Suppression de la colonne
-  const { error } = await supabase
-    .from("columns")
-    .delete()
-    .eq('id', columnId);
+  const { error } = await supabase.from("columns").delete().eq("id", columnId);
 
   if (error) throw new Error(error.message);
 
@@ -98,13 +107,12 @@ export async function deleteColumn(columnId: string) {
   redirect(`/frames/${columnData.frame_id}`);
 }
 
-
 // CREATE TICKET
 export async function createTicket(formData: FormData) {
-  const supabase = await createClient()
-  const columnId = formData.get("column_id") as string
-  const title = formData.get("title") as string
-  const description = formData.get("description") as string
+  const supabase = await createClient();
+  const columnId = formData.get("column_id") as string;
+  const title = formData.get("title") as string;
+  const description = formData.get("description") as string;
 
   const { data: last } = await supabase
     .from("tickets")
@@ -112,38 +120,44 @@ export async function createTicket(formData: FormData) {
     .eq("column_id", columnId)
     .order("position", { ascending: false })
     .limit(1)
-    .maybeSingle()
+    .maybeSingle();
 
-  const position = last?.position ? last.position + 1 : 1
+  const position = last?.position ? last.position + 1 : 1;
 
   const { error } = await supabase
     .from("tickets")
-    .insert([{ title, description, column_id: columnId, position, status: "TODO" }])
+    .insert([
+      { title, description, column_id: columnId, position, status: "TODO" },
+    ]);
 
-  if (error) throw new Error(error.message)
+  if (error) throw new Error(error.message);
 
   const { data } = await supabase
     .from("columns")
     .select("frame_id")
     .eq("id", columnId)
-    .single()
+    .single();
 
   if (data?.frame_id) {
-    redirect(`/frames/${data.frame_id}`)
+    redirect(`/frames/${data.frame_id}`);
   }
 }
 
 //MOVE TICKET
-export async function moveTicket(ticketId: string, newColumnId: string, newPosition: number) {
+export async function moveTicket(
+  ticketId: string,
+  newColumnId: string,
+  newPosition: number
+) {
   const supabase = await createClient();
 
   const { error } = await supabase
-    .from('tickets')
+    .from("tickets")
     .update({
       column_id: newColumnId,
       position: newPosition,
     })
-    .eq('id', ticketId);
+    .eq("id", ticketId);
 
   if (error) throw new Error(error.message);
 }
@@ -153,9 +167,9 @@ export async function updateColumnOrder(frameId: string, columnIds: string[]) {
   const supabase = await createClient();
 
   const { error } = await supabase
-    .from('frames')
+    .from("frames")
     .update({ column_order: columnIds })
-    .eq('id', frameId);
+    .eq("id", frameId);
 
   if (error) throw new Error(error.message);
 }
