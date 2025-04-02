@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { deleteColumn } from '@/app/frames/[id]/action'; 
 
-export function DeleteColumnDialog({ column, onClose }: { column: any; onClose: () => void }) {
+export function DeleteColumnDialog({ open, column, onClose, onOpenChange }: { open: boolean; column: any; onClose: () => void, onOpenChange: (open: boolean) => void }) {
   return (
-    <Dialog open={true}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Confirmer la suppression</DialogTitle>
@@ -15,9 +15,17 @@ export function DeleteColumnDialog({ column, onClose }: { column: any; onClose: 
           <p>Êtes-vous sûr de vouloir supprimer la colonne <strong>{column.name}</strong> ? Cette action est irréversible.</p>
         </div>
         <DialogFooter>
-          <Button onClick={async () => {
-            await deleteColumn(column.id);
-            onClose();
+          <Button onClick={() => {
+            async function deleteColumnAndClose() {
+              try {
+                onClose();
+                await deleteColumn(column.id);
+              }
+              catch (error) {
+                console.error("Erreur lors de la suppression de la colonne :", error);
+              }
+            }
+            deleteColumnAndClose();
           }}>Supprimer</Button>
           <Button variant="outline" onClick={onClose}>Annuler</Button>
         </DialogFooter>
