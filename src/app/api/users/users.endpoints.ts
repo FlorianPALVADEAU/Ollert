@@ -70,6 +70,34 @@ export const getAllNonCollaboratorUsers = async (frameId: string) => {
   }
 };
 
+export const getAllCollaboratorUsers = async (frameId: string) => {
+  try {
+      const supabase = await createClient();
+    const { data: collaborators, error: collabError } = await supabase
+      .from("frame_collaborators")
+      .select("user_id")
+      .eq("frame_id", frameId);
+
+    if (collabError) throw collabError;
+
+    const userIds = collaborators.map((c) => c.user_id);
+
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .in("id", userIds);
+
+    if (error) throw error;
+
+    return NextResponse.json(data, { status: 200 });
+  } catch {
+    return NextResponse.json(
+      { error: "Failed to fetch users" },
+      { status: 500 }
+    );
+  }
+}
+
 export const getUserById = async (id: string) => {
   try {
     if (!id) {
