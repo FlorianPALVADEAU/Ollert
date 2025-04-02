@@ -148,7 +148,6 @@ export default function FramePage() {
   return (
     <div className="p-6 bg-gray-100 min-h-screen space-y-6">
       <div className="flex justify-between items-center">
-        <AddColumnDialog frameId={frameId} />
         <h1 className="text-2xl font-bold">Tableau</h1>
         <div className="flex gap-2">
           <Dialog>
