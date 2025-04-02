@@ -24,7 +24,7 @@ export default async function DashboardPage() {
 
         <Dialog>
           <DialogTrigger asChild>
-            <Button className="cursor-pointer">Créer un tableau</Button>
+            <Button>Créer un tableau</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>

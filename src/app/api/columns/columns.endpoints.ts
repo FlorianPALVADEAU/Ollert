@@ -1,5 +1,5 @@
 import { ColumnCreateSchema, ColumnCreateType, ColumnUpdateSchema, ColumnUpdateType } from "@/app/types/columns.type";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/utils/supabase/client";
 import { useMutation, useQuery, QueryClient } from "@tanstack/react-query";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -10,6 +10,7 @@ const queryClient = new QueryClient();
 // --- Column Routes ---
 export const getAllColumns = async () => {
 	try {
+		const supabase = await createClient();
 		const { data, error } = await supabase.from("columns").select("*");
 
 		if (error) throw error;
@@ -25,7 +26,7 @@ export const getColumnById = async (id: string) => {
 		if (!id) {
 			return NextResponse.json({ error: "Le champ ID est requis"})
 		}
-		
+		const supabase = await createClient();
 		const { data, error } = await supabase.from("columns").select("*").eq("id", id).single();
 	
 		if (error) throw error;
@@ -46,7 +47,7 @@ export const createColumn = async (Column: ColumnCreateType) => {
 		}
 
         const { name, frameId, tickets } = parsedBody;
-
+		const supabase = await createClient();
         // Insertion de la colonne dans la base de données
         const { data, error } = await supabase
             .from("columns")
@@ -83,7 +84,7 @@ export const updateColumn = async (id: string, Column: ColumnUpdateType) => {
 		if (!parsedBody) {
 			return NextResponse.json({ error: "Tous les champs sont requis" }, { status: 400 });
 		}
-	
+		const supabase = await createClient();
 		const { data, error } = await supabase
 		  .from("columns")
 		  .update({
@@ -108,7 +109,7 @@ export const deleteColumn = async (id: string) => {
 		if (!id) {
 			return NextResponse.json({ error: "Le champ ID est requis"})
 		}
-
+		const supabase = await createClient();
 		const { error } = await supabase.from("columns").delete().eq("id", id);
 	
 		if (error) throw error;

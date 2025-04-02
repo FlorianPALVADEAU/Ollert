@@ -4,8 +4,8 @@ export const UserSchema = z.object({
     id: z.string().uuid(),
     name: z.string().min(1),
     email: z.string().email(),
-    createdAt: z.string().datetime(),
-    updatedAt: z.string().datetime(),
+    created_at: z.string().datetime(),
+    updated_at: z.string().datetime(),
 });
 
 export const UserArraySchema = z.array(UserSchema);

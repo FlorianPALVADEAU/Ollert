@@ -1,5 +1,5 @@
 import { TicketAssigneeCreateType, TicketAssigneeCreateSchema, TicketAssigneeUpdateType, TicketAssigneeUpdateSchema } from "@/app/types/tickets.type";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/utils/supabase/client";
 import { useMutation, useQuery, QueryClient } from "@tanstack/react-query";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -10,6 +10,7 @@ const queryClient = new QueryClient();
 // --- TicketAssignee Routes ---
 export const getAllTicketAssignees = async () => {
 	try {
+		const supabase = await createClient();
 		const { data, error } = await supabase.from("ticket_assignees").select("*");
 
 		if (error) throw error;
@@ -25,7 +26,7 @@ export const getTicketAssigneeById = async (id: string) => {
 		if (!id) {
 			return NextResponse.json({ error: "Le champ ID est requis"})
 		}
-		
+		const supabase = await createClient();
 		const { data, error } = await supabase.from("ticket_assignees").select("*").eq("id", id).single();
 	
 		if (error) throw error;
@@ -44,7 +45,7 @@ export const createTicketAssignee = async (TicketAssignee: TicketAssigneeCreateT
 		if (!parsedBody) {
 			return NextResponse.json({ error: "Tous les champs sont requis" }, { status: 400 });
 		}
-
+		const supabase = await createClient();
         // Insertion de la colonne dans la base de données
         const { data, error } = await supabase
             .from("ticket_assignees")
@@ -79,7 +80,7 @@ export const updateTicketAssignee = async (id: string, TicketAssignee: TicketAss
 		if (!parsedBody) {
 			return NextResponse.json({ error: "Tous les champs sont requis" }, { status: 400 });
 		}
-	
+		const supabase = await createClient();
 		const { data, error } = await supabase
 		  .from("ticket_assignees")
 		  .update({
@@ -104,7 +105,7 @@ export const deleteTicketAssignee = async (id: string) => {
 		if (!id) {
 			return NextResponse.json({ error: "Le champ ID est requis"})
 		}
-
+		const supabase = await createClient();
 		const { error } = await supabase.from("ticket_assignees").delete().eq("id", id);
 	
 		if (error) throw error;

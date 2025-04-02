@@ -1,5 +1,5 @@
 import { FrameCreateType, FrameCreateSchema, FrameUpdateType, FrameUpdateSchema } from "@/app/types/frames.type";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/utils/supabase/client";
 import { useMutation, useQuery, QueryClient } from "@tanstack/react-query";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -10,6 +10,7 @@ const queryClient = new QueryClient();
 // --- Frame Routes ---
 export const getAllFrames = async () => {
 	try {
+		const supabase = await createClient();
 		const { data, error } = await supabase.from("frames").select("*");
 
 		if (error) throw error;
@@ -25,7 +26,7 @@ export const getFrameById = async (id: string) => {
 		if (!id) {
 			return NextResponse.json({ error: "Le champ ID est requis"})
 		}
-		
+		const supabase = await createClient();
 		const { data, error } = await supabase.from("frames").select("*").eq("id", id).single();
 	
 		if (error) throw error;
@@ -44,7 +45,7 @@ export const createFrame = async (Frame: FrameCreateType) => {
 		if (!parsedBody) {
 			return NextResponse.json({ error: "Tous les champs sont requis" }, { status: 400 });
 		}
-
+		const supabase = await createClient();
         // Insertion de la colonne dans la base de données
         const { data, error } = await supabase
             .from("frames")
@@ -79,7 +80,7 @@ export const updateFrame = async (id: string, Frame: FrameUpdateType) => {
 		if (!parsedBody) {
 			return NextResponse.json({ error: "Tous les champs sont requis" }, { status: 400 });
 		}
-	
+		const supabase = await createClient();
 		const { data, error } = await supabase
 		  .from("frames")
 		  .update({
@@ -104,7 +105,7 @@ export const deleteFrame = async (id: string) => {
 		if (!id) {
 			return NextResponse.json({ error: "Le champ ID est requis"})
 		}
-
+		const supabase = await createClient();
 		const { error } = await supabase.from("frames").delete().eq("id", id);
 	
 		if (error) throw error;
