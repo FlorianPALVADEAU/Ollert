@@ -32,7 +32,7 @@ export function DeleteFrameDialog({ open, frame, onClose, onOpenChange }: { open
                 await deleteFrame(frame.id);
               }
               catch (error) {
-                console.error("Erreur lors de la suppression de le tableau :", error);
+                console.error("Erreur lors de la suppression du tableau :", error);
               }
             }
             deleteColumnAndClose();
