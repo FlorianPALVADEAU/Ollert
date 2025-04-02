@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { getFrameData, moveTicket } from "./action";
+import { addCollaborator, createColumn, getFrameData, moveTicket } from "./action";
 import {
   DndContext,
   closestCenter,
@@ -15,8 +15,6 @@ import {
 import { Column } from "@/components/board/Column";
 import { EditColumnDialog } from "@/components/board/EditColumnDialog";
 import { DeleteColumnDialog } from "@/components/board/DeleteColumnDialog";
-import { Check, ChevronsUpDown, LoaderCircle } from "lucide-react";
-import { createColumn, addCollaborator } from "./action";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,6 +47,7 @@ import {
 import { getAllCollaboratorUsers, getAllNonCollaboratorUsers } from "@/app/api/users/users.endpoints";
 import { UserType } from "@/app/types/users.type";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { LoaderCircle, ChevronsUpDown, Check } from "lucide-react";
 
 export default function FramePage() {
   const { id: frameId } = useParams() as { id: string };
