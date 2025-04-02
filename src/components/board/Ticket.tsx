@@ -4,15 +4,17 @@ import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 
 export function DraggableTicket({ ticket, columnId }: { ticket: any; columnId: string }) {
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: ticket.id,
     data: { columnId },
   });
 
   const style: React.CSSProperties = {
     transform: transform ? CSS.Transform.toString(transform) : undefined,
-    width: '100%',
+    width: '100%', 
     boxSizing: 'border-box',
+    transition: 'transform 200ms ease', 
+    ...(isDragging ? { transform: 'none' } : {}), 
   };
 
   return (
