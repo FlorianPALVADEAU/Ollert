@@ -148,7 +148,7 @@ export async function moveTicket(ticketId: string, newColumnId: string, newPosit
   if (error) throw new Error(error.message);
 }
 
-//MOVE COLOMNS
+//MOVE COLUMNS
 export async function updateColumnOrder(frameId: string, columnIds: string[]) {
   const supabase = await createClient();
 
