@@ -4,7 +4,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { DraggableTicket } from './Ticket';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, MoreHorizontal } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { AddTicketDialog } from './AddTicketDialog';
 import { ColumnActionsMenu } from './ColumnActionsMenu'; // Import du menu d'actions
 
