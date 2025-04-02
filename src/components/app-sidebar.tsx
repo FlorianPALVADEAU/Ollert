@@ -26,7 +26,7 @@ import { logout } from "@/app/login/action"
 const items = [
     {
         title: "Home",
-        url: "#",
+        url: "/",
         icon: Home,
     },
     {
