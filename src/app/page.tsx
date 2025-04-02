@@ -18,9 +18,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Trash } from "lucide-react";
 import { useEffect, useState } from "react";
 import { DeleteFrameDialog } from "@/components/board/DeleteFrameDialog";
-import { set } from "zod";
 
-export const DashboardPage = () => {
+export default function DashboardPage() {
   const [frames, setFrames] = useState<any[]>([]);
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [frameToDelete, setFrameToDelete] = useState<any>(null);
@@ -127,5 +126,3 @@ export const DashboardPage = () => {
     </div>
   );
 }
-
-export default DashboardPage;
