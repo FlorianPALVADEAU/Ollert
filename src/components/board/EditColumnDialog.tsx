@@ -6,9 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { updateColumn } from '@/app/frames/[id]/action'; 
 
-export function EditColumnDialog({ column, onClose }: { column: any; onClose: () => void }) {
+export function EditColumnDialog({ open, column, onClose, onOpenChange }: { open: boolean; column: any; onClose: () => void, onOpenChange: (open: boolean) => void }) {
   return (
-    <Dialog open={true}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Modifier la colonne</DialogTitle>
