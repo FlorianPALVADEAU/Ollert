@@ -4,7 +4,7 @@ import {
   UserUpdateType,
   UserUpdateSchema,
 } from "@/app/types/users.type";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/utils/supabase/client";
 import { useMutation, useQuery, QueryClient } from "@tanstack/react-query";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -12,8 +12,23 @@ import { z } from "zod";
 const queryClient = new QueryClient();
 
 // --- User Routes ---
+export const getLoggedUser = async () => {
+    try {
+		const supabase = await createClient();
+        const { data, error } = await supabase.auth.getUser();
+        if (error) {
+            console.error("Error fetching logged user:", error.message);
+            return null;
+        }
+        return data.user; // Return parsed user data
+    } catch (err) {
+        console.error("Unexpected error in getLoggedUser:", err);
+        return null;
+    }
+};
 export const getAllUsers = async () => {
   try {
+	const supabase = await createClient();
     const { data, error } = await supabase.from("users").select("*");
 
     if (error) throw error;
@@ -29,6 +44,7 @@ export const getAllUsers = async () => {
 
 export const getAllNonCollaboratorUsers = async (frameId: string) => {
   try {
+	const supabase = await createClient();
     const { data: collaborators, error: collabError } = await supabase
       .from("frame_collaborators")
       .select("user_id")
@@ -59,7 +75,7 @@ export const getUserById = async (id: string) => {
     if (!id) {
       return NextResponse.json({ error: "Le champ ID est requis" });
     }
-
+	const supabase = await createClient();
     const { data, error } = await supabase
       .from("users")
       .select("*")
@@ -85,12 +101,12 @@ export const createUser = async (User: UserCreateType) => {
       );
     }
 
-    // Insertion de la colonne dans la base de données
+	const supabase = await createClient();
     const { data, error } = await supabase.from("users").insert([
       {
         ...parsedBody,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       },
     ]);
 
@@ -125,17 +141,27 @@ export const updateUser = async (id: string, User: UserUpdateType) => {
       );
     }
 
+	const supabase = await createClient();
     const { data, error } = await supabase
       .from("users")
       .update({
         ...parsedBody,
-        updatedAt: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       })
       .eq("id", id)
       .select()
       .single();
 
     if (error) throw error;
+
+	// update the email in the auth table
+	// update the name in the auth table
+	const { error: authError } = await supabase.auth.updateUser({
+		email: parsedBody.email,
+	  	data: { name: parsedBody.name },
+	});
+
+	if (authError) throw authError;
 
     return NextResponse.json(data, { status: 200 });
   } catch (error) {
@@ -145,12 +171,37 @@ export const updateUser = async (id: string, User: UserUpdateType) => {
   }
 };
 
+export const updateUserPassword = async (id: string, password: string) => {
+	try {
+		if (!id) {
+		return NextResponse.json({ error: "Le champ ID est requis" });
+		}
+
+		if (!password) {
+		return NextResponse.json({ error: "Le champ mot de passe est requis" });
+		}
+
+		const supabase = await createClient();
+		const { error } = await supabase.auth.updateUser({
+		password,
+		});
+
+		if (error) throw error;
+
+		return NextResponse.json({ message: "Password updated successfully" }, { status: 200 });
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+		return NextResponse.json({ error: errorMessage }, { status: 500 });
+	}
+}
+
 export const deleteUser = async (id: string) => {
   try {
     if (!id) {
       return NextResponse.json({ error: "Le champ ID est requis" });
     }
 
+	const supabase = await createClient();
     const { error } = await supabase.from("users").delete().eq("id", id);
 
     if (error) throw error;
@@ -167,6 +218,14 @@ export const deleteUser = async (id: string) => {
 };
 
 // --- useQuery and useMutation Hooks ---
+
+export const useGetLoggedUser = () => {
+    return useQuery({
+        queryKey: ["loggedUser"],
+        queryFn: getLoggedUser,
+    });
+};
+
 export const useGetAllUsers = () => {
   return useQuery({ queryKey: ["users"], queryFn: getAllUsers });
 };
@@ -195,6 +254,16 @@ export const useUpdateUser = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
+  });
+};
+
+export const useUpdateUserPassword = () => {
+  return useMutation({
+	mutationFn: ({ id, password }: { id: string; password: string }) =>
+	  updateUserPassword(id, password) as Promise<unknown>,
+	onSuccess: () => {
+	  queryClient.invalidateQueries({ queryKey: ["users"] });
+	},
   });
 };
 

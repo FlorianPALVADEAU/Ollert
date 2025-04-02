@@ -1,13 +1,14 @@
 import { useMutation, useQuery, QueryClient } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
 import { NextResponse } from "next/server";
 import { CarCreateSchema, CarCreateType, CarType, CarUpdateType } from "@/app/types/cars.type";
+import { createClient } from "@/utils/supabase/client";
 
 const queryClient = new QueryClient();
 
 // --- Car Routes ---
 export const getAllCars = async () => {
   try {
+    const supabase = await createClient();
     const { data, error } = await supabase.from("cars").select("*");
 
     if (error) throw error;
@@ -23,7 +24,7 @@ export const getCarById = async (id: string) => {
     if (!id) {
       return NextResponse.json({ error: "Le champ ID est requis"})
     }
-
+    const supabase = await createClient();
     const { data, error } = await supabase.from("cars").select("*").eq("id", id).single();
 
     if (error) throw error;
@@ -43,7 +44,7 @@ export const createCar = async (car: CarCreateType) => {
     if (!parsedSchema) {
       return NextResponse.json({ error: "Tous les champs sont requis" }, { status: 400 });
     }
-
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("cars")
       .insert([{ brand, model, year }])
@@ -69,7 +70,7 @@ export const updateCar = async (id: string, car: CarUpdateType) => {
     if (!id) {
       return NextResponse.json({ error: "Car ID is required" }, { status: 400 });
     }
-
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("cars")
       .update(car)
@@ -91,7 +92,7 @@ export const deleteCar = async (id: string) => {
     if (!id) {
       return NextResponse.json({ error: "Car ID is required" }, { status: 400 });
     }
-
+    const supabase = await createClient();
     const { error } = await supabase.from("cars").delete().eq("id", id);
 
     if (error) throw error;

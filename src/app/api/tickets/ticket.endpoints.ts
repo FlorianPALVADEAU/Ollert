@@ -1,5 +1,5 @@
 import { TicketCreateType, TicketCreateSchema, TicketUpdateType, TicketUpdateSchema } from "@/app/types/tickets.type";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/utils/supabase/client";
 import { useMutation, useQuery, QueryClient } from "@tanstack/react-query";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -10,6 +10,7 @@ const queryClient = new QueryClient();
 // --- Ticket Routes ---
 export const getAllTickets = async () => {
 	try {
+		const supabase = await createClient();
 		const { data, error } = await supabase.from("tickets").select("*");
 
 		if (error) throw error;
@@ -44,8 +45,8 @@ export const createTicket = async (Ticket: TicketCreateType) => {
 		if (!parsedBody) {
 			return NextResponse.json({ error: "Tous les champs sont requis" }, { status: 400 });
 		}
-
-        // Insertion de la colonne dans la base de données
+		
+		const supabase = await createClient();
         const { data, error } = await supabase
             .from("tickets")
             .insert([
@@ -79,7 +80,7 @@ export const updateTicket = async (id: string, Ticket: TicketUpdateType) => {
 		if (!parsedBody) {
 			return NextResponse.json({ error: "Tous les champs sont requis" }, { status: 400 });
 		}
-	
+		const supabase = await createClient();
 		const { data, error } = await supabase
 		  .from("tickets")
 		  .update({
@@ -104,7 +105,7 @@ export const deleteTicket = async (id: string) => {
 		if (!id) {
 			return NextResponse.json({ error: "Le champ ID est requis"})
 		}
-
+		const supabase = await createClient();
 		const { error } = await supabase.from("tickets").delete().eq("id", id);
 	
 		if (error) throw error;

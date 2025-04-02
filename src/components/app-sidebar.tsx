@@ -1,12 +1,10 @@
 "use client"
 
 import {
-    Calendar,
     Home,
-    Inbox,
-    Search,
     Settings,
     LogOut,
+    SidebarIcon,
 } from "lucide-react"
 
 import {
@@ -31,7 +29,7 @@ const items = [
     },
     {
         title: "Settings",
-        url: "#",
+        url: "/settings",
         icon: Settings,
     },
 ]
@@ -39,11 +37,12 @@ const items = [
 export function AppSidebar() {
     return (
         <Sidebar>
-            <SidebarContent>
-                <SidebarGroup>
-                    <SidebarGroupLabel>Application</SidebarGroupLabel>
-                    <SidebarGroupContent>
-                        <SidebarMenu>
+            <SidebarContent className="h-full mt-2">
+                <SidebarGroup className="h-full">
+                    <SidebarGroupLabel>Ollert</SidebarGroupLabel>
+                    <SidebarGroupContent className="flex flex-col justify-start h-full mt-2">
+
+                        <SidebarMenu className="!h-[90%]">
                             {items.map((item) => (
                                 <SidebarMenuItem key={item.title}>
                                     <SidebarMenuButton asChild>
@@ -54,9 +53,11 @@ export function AppSidebar() {
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
                             ))}
+                        </SidebarMenu>
+                        <SidebarMenu>
                             <SidebarMenuItem>
                                 <form action={logout}>
-                                    <SidebarMenuButton type="submit" className="w-full">
+                                    <SidebarMenuButton type="submit" className="w-full bg-red-400 text-white">
                                         <LogOut />
                                         <span>Déconnexion</span>
                                     </SidebarMenuButton>
