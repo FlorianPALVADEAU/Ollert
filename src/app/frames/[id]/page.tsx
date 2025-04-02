@@ -2,223 +2,98 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import {
-  getColumnsAndTickets,
-  createColumn,
-  createTicket,
-} from './action';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Plus } from 'lucide-react';
-import {
-  DragDropContext,
-  Droppable,
-  Draggable,
-  DropResult,
-} from 'react-beautiful-dnd';
+import { getFrameData, moveTicket } from './action';
+import { DndContext, closestCenter, useSensors, useSensor, PointerSensor, DragEndEvent } from '@dnd-kit/core';
+import { Column } from '@/components/board/Column';
+import { AddColumnDialog } from '@/components/board/AddColumnDialog';
+import { EditColumnDialog } from '@/components/board/EditColumnDialog';
+import { DeleteColumnDialog } from '@/components/board/DeleteColumnDialog';
 
 export default function FramePage() {
   const { id: frameId } = useParams() as { id: string };
-  const [columns, setColumns] = useState<
-    Record<string, { id: string; title: string }[]>
-  >({});
-  const [columnIds, setColumnIds] = useState<{ id: string; name: string }[]>(
-    []
-  );
+  const [columns, setColumns] = useState<{ id: string; name: string }[]>([]);
+  const [tickets, setTickets] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
+  const [editingColumn, setEditingColumn] = useState<any | null>(null);
+  const [deletingColumn, setDeletingColumn] = useState<any | null>(null);
+
+  const sensors = useSensors(useSensor(PointerSensor));
 
   useEffect(() => {
-    async function load() {
-      try {
-        const data = await getColumnsAndTickets(frameId);
-        const byColumnName: Record<
-          string,
-          { id: string; title: string }[]
-        > = {};
+    async function fetchData() {
+      const data = await getFrameData(frameId);
+      setColumns(data.columns);
 
-        type Ticket = { id: string; title: string; column_id: string };
-
-        for (const col of data.columns) {
-          byColumnName[col.name] = (data.tickets as Ticket[])
-            .filter((t: Ticket) => t.column_id === col.id)
-            .map((t: Ticket) => ({ id: t.id, title: t.title }));
-        }
-
-        setColumns(byColumnName);
-        setColumnIds(data.columns);
-      } catch (err) {
-        console.error('Erreur chargement board:', err);
-      } finally {
-        setLoading(false);
+      const grouped: Record<string, any[]> = {};
+      for (const col of data.columns) {
+        grouped[col.id] = data.tickets.filter((t) => t.column_id === col.id);
       }
+      setTickets(grouped);
+      setLoading(false);
     }
 
-    load();
+    fetchData();
   }, [frameId]);
 
-  const onDragEnd = (result: DropResult) => {
-    const { source, destination } = result;
-    if (!destination) return;
+  const handleTicketDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!active || !over) return;
 
-    const sourceCol = source.droppableId;
-    const destCol = destination.droppableId;
+    const sourceColId = active.data.current?.columnId;
+    const destColId = over.id;
 
-    const sourceItems = Array.from(columns[sourceCol]);
-    const [movedTask] = sourceItems.splice(source.index, 1);
+    if (!sourceColId || !destColId) return;
 
-    if (sourceCol === destCol) {
-      sourceItems.splice(destination.index, 0, movedTask);
-      setColumns({
-        ...columns,
-        [sourceCol]: sourceItems,
-      });
-    } else {
-      const destItems = Array.from(columns[destCol]);
-      destItems.splice(destination.index, 0, movedTask);
-      setColumns({
-        ...columns,
-        [sourceCol]: sourceItems,
-        [destCol]: destItems,
-      });
+    if (sourceColId === destColId) return;
+
+    const ticket = tickets[sourceColId].find((t) => t.id === active.id);
+    if (!ticket) return;
+
+    const updatedSource = tickets[sourceColId].filter((t) => t.id !== active.id);
+    const updatedDest = [...(tickets[destColId] || []), { ...ticket, column_id: destColId }];
+
+    setTickets({
+      ...tickets,
+      [sourceColId]: updatedSource,
+      [destColId]: updatedDest,
+    });
+
+    try {
+      await moveTicket(String(ticket.id), String(destColId), updatedDest.length);
+    } catch (err) {
+      console.error('Erreur lors du déplacement du ticket :', err);
     }
-
-    // TODO: persist drag & drop in Supabase
   };
+  
 
-  if (loading) return <p className="p-6">Chargement...</p>;
+  if (loading) return <div className="p-6">Chargement du tableau...</div>;
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Bouton Ajouter une colonne */}
+    <div className="p-6 bg-gray-100 min-h-screen space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Tableau</h1>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>+ Ajouter une colonne</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Nouvelle colonne</DialogTitle>
-            </DialogHeader>
-            <form action={createColumn}>
-              <input type="hidden" name="frame_id" value={frameId} />
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nom de la colonne</Label>
-                  <Input id="name" name="name" placeholder="Ex: QA" required />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="submit">Créer</Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <h1 className="text-2xl font-bold">Mon tableau</h1>
+        <AddColumnDialog frameId={frameId} />
       </div>
 
-      {/* Board Trello */}
-      <DragDropContext onDragEnd={onDragEnd}>
-        <div className="flex gap-6 h-[calc(100vh-6rem)] overflow-x-auto">
-          {Object.entries(columns).map(([colName, tasks]) => {
-            const column = columnIds.find((c) => c.name === colName);
-            if (!column) return null;
-
-            return (
-              <div
-                key={colName}
-                className="flex flex-col bg-white rounded-xl shadow-md w-72 p-4"
-              >
-                <h2 className="text-lg font-bold mb-4">{colName}</h2>
-                <Droppable droppableId={colName} isDropDisabled={false}>
-                  {(provided) => (
-                    <div
-                      className="flex-1 min-h-0 overflow-y-auto space-y-3"
-                      {...provided.droppableProps}
-                      ref={provided.innerRef}
-                    >
-                      {tasks.map((task, index) => (
-                        <Draggable
-                          key={task.id}
-                          draggableId={task.id}
-                          index={index}
-                        >
-                          {(provided) => (
-                            <Card
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              className="bg-gray-50 border shadow-sm"
-                            >
-                              <CardContent className="p-4">
-                                <p>{task.title}</p>
-                              </CardContent>
-                            </Card>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </div>
-                  )}
-                </Droppable>
-
-                {/* Bouton + Modale Ajouter une tâche */}
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-4 flex items-center justify-center gap-1"
-                    >
-                      <Plus className="h-4 w-4" /> Ajouter une tâche
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Nouvelle tâche</DialogTitle>
-                    </DialogHeader>
-                    <form action={createTicket}>
-                      <input type="hidden" name="column_id" value={column.id} />
-                      <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="title">Titre</Label>
-                          <Input
-                            id="title"
-                            name="title"
-                            placeholder="Ex: corriger un bug"
-                            required
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="description">Description</Label>
-                          <Textarea
-                            id="description"
-                            name="description"
-                            placeholder="Optionnel"
-                          />
-                        </div>
-                      </div>
-                      <DialogFooter>
-                        <Button type="submit">Créer</Button>
-                      </DialogFooter>
-                    </form>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            );
-          })}
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleTicketDragEnd}>
+        <div className="flex gap-4 overflow-x-auto h-[calc(100vh-12rem)] pb-6">
+          {columns.map((column) => (
+            <Column
+              key={column.id}
+              column={column}
+              tickets={tickets[column.id] || []}
+              onEdit={() => setEditingColumn(column)}
+              onDelete={() => setDeletingColumn(column)}
+            />
+          ))}
         </div>
-      </DragDropContext>
+      </DndContext>
+
+      {/* Modale pour modifier la colonne */}
+      {editingColumn && <EditColumnDialog column={editingColumn} onClose={() => setEditingColumn(null)} />}
+
+      {/* Modale pour supprimer la colonne */}
+      {deletingColumn && <DeleteColumnDialog column={deletingColumn} onClose={() => setDeletingColumn(null)} />}
     </div>
   );
 }
