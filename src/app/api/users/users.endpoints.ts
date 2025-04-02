@@ -8,6 +8,26 @@ const queryClient = new QueryClient();
 
 
 // --- User Routes ---
+export const getLoggedUser = async () => {
+    try {
+        const { data: session } = await supabase.auth.getSession();
+        if (!session) {
+            console.error("No active session found. User is not logged in.");
+            return NextResponse.json({ error: "User is not authenticated" }, { status: 401 });
+        }
+
+        const { data, error } = await supabase.auth.getUser();
+        if (error) {
+            console.error("Error fetching logged user:", error.message);
+            return NextResponse.json({ error: "Failed to fetch logged user" }, { status: 500 });
+        }
+
+        return NextResponse.json(data.user, { status: 200 });
+    } catch (err) {
+        console.error("Unexpected error in getLoggedUser:", err);
+        return NextResponse.json({ error: "Unexpected error occurred" }, { status: 500 });
+    }
+};
 export const getAllUsers = async () => {
 	try {
 		const { data, error } = await supabase.from("users").select("*");
@@ -117,6 +137,11 @@ export const deleteUser = async (id: string) => {
 };
 
 // --- useQuery and useMutation Hooks ---
+
+export const useGetLoggedUser = () => {
+  return useQuery({ queryKey: ["loggedUser"], queryFn: getLoggedUser });
+};
+
 export const useGetAllUsers = () => {
   return useQuery({ queryKey: ["users"], queryFn: getAllUsers });
 };

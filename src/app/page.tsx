@@ -26,7 +26,7 @@ export default function DashboardPage() {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Mes Tableaux</h1>
-        <Button>
+        <Button className="cursor-pointer">
           <Plus className="mr-2 h-4 w-4" />
           Nouveau tableau
         </Button>

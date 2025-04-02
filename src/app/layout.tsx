@@ -10,7 +10,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     const user = data.user;
 
     return (
-        <html lang="FR" title="We 💘 pepe!">
+        <html lang="FR">
         <body>
         <Providers>
             <LayoutClient user={user}>
