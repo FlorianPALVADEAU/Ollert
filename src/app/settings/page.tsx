@@ -100,8 +100,6 @@ const Page = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      console.log(data);
-
       if (data) {
         setNewEmail(data.email || "");
         setNewName(data?.user_metadata?.name || "");

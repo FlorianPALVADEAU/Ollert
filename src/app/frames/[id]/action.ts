@@ -30,15 +30,33 @@ export async function getFrameData(frameId: string) {
 
   const columnIds = columns.map((c) => c.id);
 
+  // get all tickets with their column_id, title, description, position and status, and retrieve it's collaborators
+  // then, do another request to get the users of the collaborators
+  // and add them to the tickets
   const { data: tickets, error: ticketError } = await supabase
     .from("tickets")
-    .select("id, title, description, column_id, position, status")
+    .select(`
+      *,
+      ticket_assignees (
+        id,
+        users (
+          id, name, email
+        )
+      )
+    `)
     .in("column_id", columnIds)
     .order("position", { ascending: true });
-
   if (ticketError) throw new Error(ticketError.message);
 
-  return { columns, tickets };
+  // get the frame data
+  const { data: frame, error: frameError } = await supabase
+    .from("frames")
+    .select(`*`)
+    .eq("id", frameId)
+    .single();
+  if (frameError) throw new Error(frameError.message);
+
+  return { columns, tickets, frame };
 }
 
 // CREATE COLUMN

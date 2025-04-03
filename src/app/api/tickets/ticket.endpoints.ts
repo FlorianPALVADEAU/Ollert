@@ -15,7 +15,12 @@ const queryClient = new QueryClient();
 export const getAllTickets = async () => {
   try {
     const supabase = await createClient();
-    const { data, error } = await supabase.from("tickets").select("*");
+    // get all tickets and fetch their collaborators by using a join query, and add it to the ticket object on assignees property
+    const { data, error } = await supabase
+      .from("tickets")
+      .select(
+        `*, ticket_assignees (user_id), users (id, first_name, last_name, email)`
+      );
 
     if (error) throw error;
 
@@ -36,7 +41,9 @@ export const getTicketById = async (id: string) => {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("tickets")
-      .select("*")
+      .select(
+        `*, ticket_assignees (user_id), users (id, first_name, last_name, email)`
+      )
       .eq("id", id)
       .single();
 
@@ -140,6 +147,31 @@ export const deleteTicket = async (id: string) => {
   }
 };
 
+export const assignUserToTicket = async (
+  ticketId: string,
+  userId: string
+) => {
+  try {
+    if (!ticketId || !userId) {
+      return NextResponse.json({ error: "Le champ ID est requis" });
+    }
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("ticket_assignees")
+      .insert([{ ticket_id: ticketId, user_id: userId }])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return NextResponse.json(data, { status: 201 });
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "An unknown error occurred";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
+  }
+}
+
 // --- useQuery and useMutation Hooks ---
 export const useGetAllTickets = () => {
   return useQuery({ queryKey: ["tickets"], queryFn: getAllTickets });
@@ -180,3 +212,13 @@ export const useDeleteTicket = () => {
     },
   });
 };
+
+export const useAssignUserToTicket = () => {
+  return useMutation({
+    mutationFn: ({ ticketId, userId }: { ticketId: string; userId: string }) =>
+      assignUserToTicket(ticketId, userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tickets"] });
+    },
+  });
+}

@@ -48,6 +48,8 @@ import { getAllCollaboratorUsers, getAllNonCollaboratorUsers } from "@/app/api/u
 import { UserType } from "@/app/types/users.type";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LoaderCircle, ChevronsUpDown, Check } from "lucide-react";
+import { randomColors } from "@/utils/randomColors";
+import { FrameType } from "@/app/types/frames.type";
 
 export default function FramePage() {
   const { id: frameId } = useParams() as { id: string };
@@ -65,22 +67,11 @@ export default function FramePage() {
     editColumn: false,
     deleteColumn: false,
   });
+  const [refetchTickets, setRefetchTickets] = useState<boolean>(false);
   const [value, setValue] = useState("");
-  const randomColors = [
-    "bg-red-300",
-    "bg-blue-300",
-    "bg-green-300",
-    "bg-yellow-300",
-    "bg-purple-300",
-    "bg-pink-300",
-    "bg-orange-300",
-    "bg-teal-300",
-    "bg-indigo-300",
-    "bg-gray-300",
-  ];
-
   const [users, setUsers] = useState<UserType[]>([]);
   const [collaborators, setCollaborators] = useState<UserType[]>([]);
+  const [frame, setFrame] = useState<FrameType | null>(null);
 
   const [editingColumn, setEditingColumn] = useState<any | null>(null);
   const [deletingColumn, setDeletingColumn] = useState<any | null>(null);
@@ -89,21 +80,23 @@ export default function FramePage() {
 
   useEffect(() => {
     async function fetchData() {
+      setLoading(true);
       const data = await getFrameData(frameId);
       setColumns(data.columns);
-
+      setFrame(data.frame);
       const grouped: Record<string, any[]> = {};
       for (const col of data.columns) {
         grouped[col.id] = data.tickets.filter((t) => t.column_id === col.id);
       }
       setTickets(grouped);
       setLoading(false);
+      setRefetchTickets(false);
     }
 
     if (frameId) {
       fetchData();
     }
-  }, [frameId, dialogState]);
+  }, [frameId, dialogState, refetchTickets]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -179,7 +172,13 @@ export default function FramePage() {
   return (
     <div className="p-6 bg-gray-100 min-h-screen space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Tableau</h1>
+        <h1 className="text-2xl font-bold">{!loading ? 
+          frame?.name || "Tableau" : 
+          (
+          <div className="flex items-center justify-center h-10 w-10">
+            <LoaderCircle className="animate-spin text-gray-500 h-5 w-5 mx-auto" />
+          </div>)
+        }</h1>
         <div className="flex gap-2">
           <div className="relative flex -space-x-4">
             {loading ? (
@@ -343,6 +342,7 @@ export default function FramePage() {
                     setDialogState((prev) => ({ ...prev, deleteColumn: true })); 
                     setDeletingColumn(column);
                   }}
+                  refetchTickets={() => setRefetchTickets(true)}
                 />
               ))}
             </div>
