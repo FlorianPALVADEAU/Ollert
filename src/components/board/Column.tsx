@@ -8,7 +8,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
 import { AddTicketDialog } from "./AddTicketDialog";
@@ -19,21 +18,16 @@ export function Column({
   tickets,
   onEdit,
   onDelete,
+  refetchTickets,
 }: {
   column: any;
   tickets: any[];
   onEdit: () => void;
   onDelete: () => void;
+  refetchTickets: () => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
-  const [isDialogOpen, setIsDialogOpen] = useState(false); // État pour gérer l'ouverture de la boîte de dialogue
-  const [selectedTicket, setSelectedTicket] = useState<any>(null); // Pour savoir quel ticket a été sélectionné
-
-  const handleTicketClick = (ticket: any) => {
-    console.log("click");
-    setSelectedTicket(ticket); // Définir le ticket sélectionné
-    setIsDialogOpen(true); // Ouvrir la boîte de dialogue
-  };
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   return (
     <div
@@ -51,43 +45,18 @@ export function Column({
         {tickets.map((ticket) => (
           <div
             key={ticket.id}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleTicketClick(ticket);
-            }}
           >
             <DraggableTicket
               ticket={ticket}
               columnId={column.id}
-              handleTicketClick={handleTicketClick}
-            />
+              open={isDialogOpen}
+              onClose={() => setIsDialogOpen(false)}
+              setOpen={() => setIsDialogOpen(true)}
+              refetchTicket={refetchTickets}
+              />
           </div>
         ))}
       </div>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Détails de la tâche</DialogTitle>
-          </DialogHeader>
-          {selectedTicket && (
-            <div>
-              <p>
-                <strong>ID de la tâche:</strong> {selectedTicket.id}
-              </p>
-              <p>
-                <strong>Nom de la tâche:</strong> {selectedTicket.name}
-              </p>
-              {/* Ajoutez plus de détails du ticket ici */}
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Fermer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <Dialog>
         <DialogTrigger asChild>

@@ -27,7 +27,7 @@ export const getTicketAssigneeById = async (id: string) => {
 			return NextResponse.json({ error: "Le champ ID est requis"})
 		}
 		const supabase = await createClient();
-		const { data, error } = await supabase.from("ticket_assignees").select("*").eq("id", id).single();
+		const { data, error } = await supabase.from("ticket_assignees").select("*").eq("ticket_id", id).single();
 	
 		if (error) throw error;
 	
@@ -71,34 +71,38 @@ export const createTicketAssignee = async (TicketAssignee: TicketAssigneeCreateT
 
 export const updateTicketAssignee = async (id: string, TicketAssignee: TicketAssigneeUpdateType) => {
 	try {
-		if (!id) {
-			return NextResponse.json({ error: "Le champ ID est requis"})
-		}
-
-		const parsedBody = TicketAssigneeUpdateSchema.parse(TicketAssignee)
-	
-		if (!parsedBody) {
-			return NextResponse.json({ error: "Tous les champs sont requis" }, { status: 400 });
-		}
-		const supabase = await createClient();
-		const { data, error } = await supabase
-		  .from("ticket_assignees")
-		  .update({
-			...parsedBody,
-			updatedAt: new Date().toISOString(),
-		  })
-		  .eq("id", id)
-		  .select()
-		  .single();
-	
-		if (error) throw error;
-	
-		return NextResponse.json(data, { status: 200 });
-	  } catch (error) {
-		const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-		return NextResponse.json({ error: errorMessage }, { status: 500 });
+	  console.log("Updating ticket_assignees for:", TicketAssignee);
+  
+	  const parsedBody = TicketAssigneeUpdateSchema.parse(TicketAssignee);
+  
+	  const supabase = await createClient();
+	  const { data, error } = await supabase
+		.from("ticket_assignees")
+		.update({
+		  ...parsedBody,
+		})
+		.eq("id", id)
+		.select()
+		.maybeSingle();
+  
+	  if (error) {
+		console.error("Supabase update error:", error);
+		throw error;
 	  }
-};
+  
+	  if (!data) {
+		return NextResponse.json({ error: "Aucun ticket_assignee trouvé" }, { status: 404 });
+	  }
+  
+	  return NextResponse.json(data, { status: 200 });
+	} catch (error) {
+	  console.error("Update Ticket Assignee error:", error);
+	  const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+	  return NextResponse.json({ error: errorMessage }, { status: 500 });
+	}
+  };
+  
+  
 
 export const deleteTicketAssignee = async (id: string) => {
 	try {
@@ -132,7 +136,7 @@ export const useGetTicketAssigneeById = (id: string) => {
 
 export const useCreateTicketAssignee = () => {
   return useMutation({
-	mutationFn: (column: TicketAssigneeCreateType) => createTicketAssignee(column),
+	mutationFn: (ticket_assignee: TicketAssigneeCreateType) => createTicketAssignee(ticket_assignee),
 	onSuccess: () => {
 	  queryClient.invalidateQueries({ queryKey: ["ticket_assignees"] });
 	},
@@ -141,7 +145,7 @@ export const useCreateTicketAssignee = () => {
 
 export const useUpdateTicketAssignee = () => {
   return useMutation({
-	mutationFn: ({ id, column }: { id: string; column: TicketAssigneeUpdateType }) => updateTicketAssignee(id, column) as Promise<unknown>,
+	mutationFn: ({ id, ticket_assignee }: { id: string, ticket_assignee: TicketAssigneeUpdateType }) => updateTicketAssignee(id, ticket_assignee) as Promise<unknown>,
 	onSuccess: () => {
 	  queryClient.invalidateQueries({ queryKey: ["ticket_assignees"] });
 	},
